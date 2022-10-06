@@ -45,7 +45,8 @@ with date_range as (
   , GA4_basic_metrics_pivoted as (
     SELECT
      count(distinct user_pseudo_id) as users
-    , count((select value.int_value from unnest(event_params) where event_name = 'session_start' and key = 'ga_session_id')) as sessions
+    , count(distinct concat(user_pseudo_id, (select value.int_value from unnest(event_params) where key = 'ga_session_id'))) as sessions 
+     -- Other option for session count could be the following as per Google Documentation, but about 1% of session_start are empty as of Oct 2022: count((select value.int_value from unnest(event_params) where event_name = 'session_start' and key = 'ga_session_id')) as sessions
     , SUM((CASE WHEN event_name='ecommerce_purchase' THEN 1 ELSE 0 END)) + SUM((CASE WHEN event_name='purchase' THEN 1 ELSE 0 END)) as transactions
     , SUM(CAST (ecommerce.purchase_revenue_in_usd*1000000 AS INT)) as revenue_10E6_in_usd_GA4_and_global_currency_in_UA
     FROM `your_project.your_GA4_ID.events_20*`
